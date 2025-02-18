@@ -27,7 +27,10 @@ void Application<ApplicationCategories::CONSOLE_CLI>::CommandRegistrate() {
     commands_.Add(
         std::pair<std::string, ::commands::CommandCreator<commands::Help>>{"help", {}},
         std::pair<std::string, ::commands::CommandCreator<commands::Quit>>{"quit", {}},
-        std::pair<std::string, commands::YaRaspCommandCreator<commands::Save>>{"save", {cli_}}
+        std::pair<std::string, commands::YaRaspCommandCreator<commands::Save>>{"save", {cli_}},
+        std::pair<std::string, commands::YaRaspCommandCreator<commands::ScanBase>>{"scan", {cli_}},
+        std::pair<std::string, commands::YaRaspCommandCreator<commands::ListBase>>{"list", {cli_}},
+        std::pair<std::string, commands::YaRaspCommandCreator<commands::FindBase>>{"find", {cli_}}
     );
 };
 
