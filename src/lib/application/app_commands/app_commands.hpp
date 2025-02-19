@@ -15,6 +15,8 @@ using CommandExeStatus = ::commands::CommandExeStatus;
 
 namespace commands {
 
+const std::string kAllValue = "all";
+
 class Help : public ::commands::CommandBase {
  public:
     CommandExeStatus Run() override { 

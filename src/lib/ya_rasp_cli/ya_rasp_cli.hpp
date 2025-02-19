@@ -1,6 +1,7 @@
 #ifndef _YA_RASP_CLI_HPP_
 #define _YA_RASP_CLI_HPP_
 
+#include "nlohmann/json_fwd.hpp"
 #include <initializer_list>
 #include <string>
 #include <optional>
@@ -29,14 +30,18 @@ class YaRaspCli {
     std::optional<std::reference_wrapper<nlohmann::json>>
       StationList(const std::string& country_id, const std::string& region_id, const std::string& city_id);
 
+         
+ private:   
+    nlohmann::json FindPointByName(const nlohmann::json& point_list, const std::string& name);
+
  public:
     nlohmann::json FindCountry(const std::string& name);
     nlohmann::json FindRegion(const std::string& name);
     nlohmann::json FindCity(const std::string& name);
     nlohmann::json FindStation(const std::string& name);
-
+ 
  public: 
- bool PointsJsonOutput(std::ostream& stream, const nlohmann::json& points_json,
+    bool PointsJsonOutput(std::ostream& stream, const nlohmann::json& points_json,
                     const std::string& name_colom, const std::string& id_colom);
  
  public:

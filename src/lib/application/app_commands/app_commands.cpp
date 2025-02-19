@@ -91,9 +91,13 @@ CommandExeStatus FindCountry::Run() {
     std::string search_str;
     std::cin >> search_str;
 
-    auto&& country_list = cli_.FindCountry(search_str);
+    if (search_str == kAllValue) {
+        search_str = "";        
+    }
 
-    if (!cli_.PointsJsonOutput(std::cout, country_list, "country name", "coutry id")) {
+    auto&& list = cli_.FindCountry(search_str);
+
+    if (!cli_.PointsJsonOutput(std::cout, list, "country name", "coutry id")) {
         std::cout << "Can not find country by {" << search_str << "} request" << "\n"
             << "try to rescan points" << std::endl;
     }
@@ -103,13 +107,18 @@ CommandExeStatus FindCountry::Run() {
 
 
 CommandExeStatus FindRegion::Run() {
-    std::string country_id;
-    std::cin >> country_id;
+    std::string search_str;
+    std::cin >> search_str;
 
-    if (country_id == "ALL") {
+    if (search_str == kAllValue) {
+        search_str = "";        
+    }
 
-    } else {
-        
+    auto&& list = cli_.FindRegion(search_str);
+
+    if (!cli_.PointsJsonOutput(std::cout, list, "region name", "region id")) {
+        std::cout << "Can not find region by {" << search_str << "} request" << "\n"
+            << "try to rescan points" << std::endl;
     }
 
     return CommandExeStatus::CORRECT;
@@ -117,6 +126,19 @@ CommandExeStatus FindRegion::Run() {
 
 
 CommandExeStatus FindCity::Run() {
+    std::string search_str;
+    std::cin >> search_str;
+
+    if (search_str == kAllValue) {
+        search_str = "";        
+    }
+
+    auto&& list = cli_.FindCity(search_str);
+
+    if (!cli_.PointsJsonOutput(std::cout, list, "city name", "city id")) {
+        std::cout << "Can not find city by {" << search_str << "} request" << "\n"
+            << "try to rescan points" << std::endl;
+    }
 
     return CommandExeStatus::CORRECT;
 }

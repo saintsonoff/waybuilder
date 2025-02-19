@@ -311,22 +311,22 @@ void BuildJsonPath(nlohmann::json& json_object, const std::decay_t<decltype(json
 } // namespace
 
 
-nlohmann::json YaRaspCli::FindCountry(const std::string& name) {
-    nlohmann::json country_list = nlohmann::json::array();
+nlohmann::json YaRaspCli::FindPointByName(const nlohmann::json& point_list, const std::string& name) {
+    nlohmann::json result_point_list = nlohmann::json::array();
 
     try {
-        for (auto& coutry : point_list_.at(kCountryJsonPtr)) {
+        for (auto& coutry : point_list) {
             if (coutry.contains(kPointIdJsonPtr) && coutry.contains(kPointNameJsonPtr)) {
-                if (coutry.at(kPointNameJsonPtr).get_ref<std::string&>().find(name) != std::string::npos) {
-                    nlohmann::json coutry_json = {};
+                if (coutry.at(kPointNameJsonPtr).get_ref<const std::string&>().find(name) != std::string::npos) {
+                    nlohmann::json point_json = {};
                     
-                    BuildJsonPath(coutry_json, kPointIdJsonPtr);
-                    BuildJsonPath(coutry_json, kPointNameJsonPtr);
-                    
-                    coutry_json.at(kPointIdJsonPtr) = coutry.at(kPointIdJsonPtr);
-                    coutry_json.at(kPointNameJsonPtr) = coutry.at(kPointNameJsonPtr);
+                    BuildJsonPath(point_json, kPointIdJsonPtr);
+                    BuildJsonPath(point_json, kPointNameJsonPtr);
 
-                    country_list.push_back(coutry_json);
+                    point_json.at(kPointIdJsonPtr) = coutry.at(kPointIdJsonPtr);
+                    point_json.at(kPointNameJsonPtr) = coutry.at(kPointNameJsonPtr);
+
+                    result_point_list.push_back(point_json);
                 }
             }
         }
@@ -336,17 +336,56 @@ nlohmann::json YaRaspCli::FindCountry(const std::string& name) {
         BOOST_LOG_SEV(GetLoggerRef(), boost::log::trivial::error) << "exception id: " << ex.id << " | " << ex.what();
     }
 
-    return country_list;
+    return result_point_list;
+};
+
+
+nlohmann::json YaRaspCli::FindCountry(const std::string& name) {
+    try {
+        return FindPointByName(point_list_.at(kCountryJsonPtr), name);
+    } catch (nlohmann::json::out_of_range& ex) {
+        BOOST_LOG_SEV(GetLoggerRef(), boost::log::trivial::error) << "exception id: " << ex.id << " | " << ex.what();
+    } catch (nlohmann::json::parse_error& ex) {
+        BOOST_LOG_SEV(GetLoggerRef(), boost::log::trivial::error) << "exception id: " << ex.id << " | " << ex.what();
+    }
+    return {};
 }
 
 
 nlohmann::json YaRaspCli::FindRegion(const std::string& name) {
-
+    nlohmann::json result = nlohmann::json::array();
+    try {
+        auto& coutries = point_list_.at(kCountryJsonPtr);
+        std::for_each(coutries.begin(), coutries.end(), [&](auto& coutry){
+            nlohmann::json region_list = FindPointByName(coutry.at(kRegionJsonPtr), name);
+            result.insert(result.end(), region_list.begin(), region_list.end());
+        });
+    } catch (nlohmann::json::out_of_range& ex) {
+        BOOST_LOG_SEV(GetLoggerRef(), boost::log::trivial::error) << "exception id: " << ex.id << " | " << ex.what();
+    } catch (nlohmann::json::parse_error& ex) {
+        BOOST_LOG_SEV(GetLoggerRef(), boost::log::trivial::error) << "exception id: " << ex.id << " | " << ex.what();
+    }
+    return result;
 }
 
 
 nlohmann::json YaRaspCli::FindCity(const std::string& name) {
-
+    nlohmann::json result = nlohmann::json::array();
+    try {
+        auto& coutries = point_list_.at(kCountryJsonPtr);
+        std::for_each(coutries.begin(), coutries.end(), [&](auto& coutry){
+            auto& regions = coutry.at(kRegionJsonPtr);
+            std::for_each(regions.begin(), regions.end(), [&](auto& region){
+                nlohmann::json city_list = FindPointByName(region.at(kCityJsonPtr), name);
+                result.insert(result.end(), city_list.begin(), city_list.end());
+            });
+        });
+    } catch (nlohmann::json::out_of_range& ex) {
+        BOOST_LOG_SEV(GetLoggerRef(), boost::log::trivial::error) << "exception id: " << ex.id << " | " << ex.what();
+    } catch (nlohmann::json::parse_error& ex) {
+        BOOST_LOG_SEV(GetLoggerRef(), boost::log::trivial::error) << "exception id: " << ex.id << " | " << ex.what();
+    }
+    return result;
 }
 
 
@@ -365,7 +404,7 @@ bool YaRaspCli::PointsJsonOutput(std::ostream& stream, const nlohmann::json& poi
         return false;
     }
 
-    std::cout << "country name" << " " << std::setw(kCollomSpaceOffset) << "country_id" << std::endl;
+    stream << name_colom << " " << std::setw(kCollomSpaceOffset) << id_colom << std::endl;
 
     try {
         for (auto&& point : points_json) {
