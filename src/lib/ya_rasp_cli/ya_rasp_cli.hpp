@@ -1,13 +1,12 @@
 #ifndef _YA_RASP_CLI_HPP_
 #define _YA_RASP_CLI_HPP_
 
-#include "nlohmann/json_fwd.hpp"
 #include <initializer_list>
 #include <string>
 #include <optional>
 #include <functional>
-#include <unordered_map>
 
+#include <nlohmann/json_fwd.hpp>
 #include <nlohmann/json.hpp>
 #include <cpr/cpr.h>
 #include <boost/log/sources/logger.hpp>
@@ -17,12 +16,17 @@ namespace waybuilder {
 class YaRaspCli {
  public:
     YaRaspCli(const std::string& api_key, const std::string& point_list_path,
-        const std::string& api_cfg_path, const std::string& log_dir_path = "./logs/");
+        const std::string& api_cfg_path, const std::string& api_lang, const std::string& log_dir_path = "./logs/");
     YaRaspCli(const std::string& api_cfg_path, const std::string& log_dir_path = "./logs/");
 
  public:
-    cpr::Response ScanPoints(std::string lang = "ru_RU");
+    cpr::Response ScanPoints();
+    cpr::Response ScanWays(const std::string& from_point, const std::string& to_point,
+        const std::string& date = "", bool transfers = false, const std::string& transport_types = "", const std::string& system = "",
+        const std::string& show_systems = "", size_t offset = 0, size_t limit = 0, bool add_days_mask = false,
+        const std::string& result_timezone = "");
 
+ public:
     std::optional<std::reference_wrapper<nlohmann::json>> CountryList();
     std::optional<std::reference_wrapper<nlohmann::json>> RegionList(const std::string& country_id);
     std::optional<std::reference_wrapper<nlohmann::json>>
@@ -30,7 +34,6 @@ class YaRaspCli {
     std::optional<std::reference_wrapper<nlohmann::json>>
       StationList(const std::string& country_id, const std::string& region_id, const std::string& city_id);
 
-         
  private:   
     nlohmann::json FindPointByName(const nlohmann::json& point_list, const std::string& name);
 
@@ -50,6 +53,7 @@ class YaRaspCli {
 
  public:
     bool Save();
+    void SetLang(const std::string& lang) { api_lang_ = lang; };
 
  public:
     boost::log::sources::logger& GetLoggerRef() { return logger_; };
@@ -67,6 +71,7 @@ class YaRaspCli {
     std::string api_key_;
     std::string api_url_;
     std::string api_version_;
+    std::string api_lang_;
 
     nlohmann::json point_list_;
 
@@ -83,6 +88,7 @@ class YaRaspCli {
     static const nlohmann::json::json_pointer kPointListPathJsonPtr;
     static const nlohmann::json::json_pointer kApiUrlJsonPtr;
     static const nlohmann::json::json_pointer kApiVersionJsonPtr;
+    static const nlohmann::json::json_pointer kApiLangJsonPtr;
 
  private:
     static const nlohmann::json::json_pointer kCountryJsonPtr;

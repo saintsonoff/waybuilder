@@ -78,6 +78,14 @@ class ScanPoints : public ScanBase {
 };
 
 
+class ScanWays : public ScanBase {
+ public:
+    using ScanBase::ScanBase;
+ public:
+    CommandExeStatus Run() override;
+};
+
+
 template<>
 class YaRaspCommandCreator<ScanBase> : public ::commands::CommandCreatorBase {
  public:
@@ -87,7 +95,7 @@ class YaRaspCommandCreator<ScanBase> : public ::commands::CommandCreatorBase {
         std::string scan_type;
         std::cin >> scan_type;
         if (scan_type == "way") {
-            // return std::make_shared<YaRaspCommand>(cli_);
+            return std::make_shared<ScanWays>(cli_);
         } else if (scan_type == "points") {
             return std::make_shared<ScanPoints>(cli_);
         } else {

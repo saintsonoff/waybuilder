@@ -12,7 +12,7 @@ namespace waybuilder {
 namespace __detail {
 
 Application<ApplicationCategories::CONSOLE_CLI>::Application(std::string api_key, std::string point_list_path, std::string api_cfg_path) 
-  : cli_{api_key, point_list_path, api_cfg_path} {
+  : cli_{api_key, point_list_path, api_cfg_path, "ru_RU"} {
     CommandRegistrate();
 };
 
