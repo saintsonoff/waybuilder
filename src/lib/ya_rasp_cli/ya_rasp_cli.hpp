@@ -42,17 +42,14 @@ class YaRaspCli {
     nlohmann::json FindRegion(const std::string& name);
     nlohmann::json FindCity(const std::string& name);
     nlohmann::json FindStation(const std::string& name);
- 
- public: 
-    bool PointsJsonOutput(std::ostream& stream, const nlohmann::json& points_json,
-                    const std::string& name_colom, const std::string& id_colom);
- 
+  
  public:
     bool DumpCfg();
     bool LoadCfg();
 
  public:
     bool Save();
+    std::string GetLang() const { return api_lang_; };
     void SetLang(const std::string& lang) { api_lang_ = lang; };
 
  public:
@@ -78,25 +75,8 @@ class YaRaspCli {
  private: 
     std::string api_cfg_path_;
     std::string point_list_path_;
-
- public:
-    static const nlohmann::json::json_pointer kPointIdJsonPtr;
-    static const nlohmann::json::json_pointer kPointNameJsonPtr;
-
- private:
-    static const nlohmann::json::json_pointer kApiKeyJsonPtr;
-    static const nlohmann::json::json_pointer kPointListPathJsonPtr;
-    static const nlohmann::json::json_pointer kApiUrlJsonPtr;
-    static const nlohmann::json::json_pointer kApiVersionJsonPtr;
-    static const nlohmann::json::json_pointer kApiLangJsonPtr;
-
- private:
-    static const nlohmann::json::json_pointer kCountryJsonPtr;
-    static const nlohmann::json::json_pointer kRegionJsonPtr;
-    static const nlohmann::json::json_pointer kCityJsonPtr;
-    static const nlohmann::json::json_pointer kStationJsonPtr;
 };
 
 } // namespace waybuilder
 
-#endif // _YA_RASP_CLI_HPP_
+#endif // _YA_RASP_CLI_HPP_+

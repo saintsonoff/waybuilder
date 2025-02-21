@@ -1,6 +1,3 @@
-add_library(ya_rasp_cli STATIC ya_rasp_cli.cpp)
-
-
 include(FetchContent)
 
 # nlohmann/json connecting
@@ -23,9 +20,18 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Boost)
 
+add_library(ya_rasp_json_ptr STATIC ya_rasp_json_ptr.cpp)
+
+target_link_libraries(ya_rasp_json_ptr PUBLIC nlohmann_json::nlohmann_json)
+target_include_directories(ya_rasp_json_ptr PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+
+add_library(ya_rasp_cli STATIC ya_rasp_cli.cpp)
 
 target_link_libraries(ya_rasp_cli PUBLIC cpr::cpr)
 target_link_libraries(ya_rasp_cli PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(ya_rasp_cli PUBLIC Boost::log Boost::log_setup)
+
+target_link_libraries(ya_rasp_cli PRIVATE ya_rasp_json_ptr)
 
 target_include_directories(ya_rasp_cli PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

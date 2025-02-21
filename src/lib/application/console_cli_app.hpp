@@ -5,6 +5,7 @@
 
 #include <command_fab.hpp>
 #include <ya_rasp_cli.hpp>
+#include <output_manager.hpp>
 
 namespace waybuilder {
 
@@ -25,6 +26,7 @@ class Application<ApplicationCategories::CONSOLE_CLI> {
  private:
     ::commands::CommandFabric commands_;
     YaRaspCli cli_;
+    YaRaspOutputManager output_manager_;
 };
 
 } // namespace __detail

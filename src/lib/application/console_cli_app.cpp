@@ -1,5 +1,6 @@
 #include "console_cli_app.hpp"
 #include "application.hpp"
+#include "output_manager.hpp"
 
 #include <utility>
 #include <string>
@@ -12,25 +13,26 @@ namespace waybuilder {
 namespace __detail {
 
 Application<ApplicationCategories::CONSOLE_CLI>::Application(std::string api_key, std::string point_list_path, std::string api_cfg_path) 
-  : cli_{api_key, point_list_path, api_cfg_path, "ru_RU"} {
+  : cli_{api_key, point_list_path, api_cfg_path, "ru_RU"}, output_manager_{} {
     CommandRegistrate();
 };
 
 
 Application<ApplicationCategories::CONSOLE_CLI>::Application(std::string api_cfg_path)
-  : cli_{api_cfg_path} {
+    : output_manager_{}, cli_{api_cfg_path} {
     CommandRegistrate();
 }
 
 
 void Application<ApplicationCategories::CONSOLE_CLI>::CommandRegistrate() {
     commands_.Add(
-        std::pair<std::string, ::commands::CommandCreator<commands::Help>>{"help", {}},
         std::pair<std::string, ::commands::CommandCreator<commands::Quit>>{"quit", {}},
-        std::pair<std::string, commands::YaRaspCommandCreator<commands::Save>>{"save", {cli_}},
-        std::pair<std::string, commands::YaRaspCommandCreator<commands::ScanBase>>{"scan", {cli_}},
-        std::pair<std::string, commands::YaRaspCommandCreator<commands::ListBase>>{"list", {cli_}},
-        std::pair<std::string, commands::YaRaspCommandCreator<commands::FindBase>>{"find", {cli_}}
+        std::pair<std::string, commands::YaRaspCommandCreator<commands::Help>>{"help", {cli_, output_manager_}},
+        std::pair<std::string, commands::YaRaspCommandCreator<commands::Save>>{"save", {cli_, output_manager_}},
+        std::pair<std::string, commands::YaRaspCommandCreator<commands::ChangeBase>>{"change", {cli_, output_manager_}},
+        std::pair<std::string, commands::YaRaspCommandCreator<commands::ScanBase>>{"scan", {cli_, output_manager_}},
+        std::pair<std::string, commands::YaRaspCommandCreator<commands::ListBase>>{"list", {cli_, output_manager_}},
+        std::pair<std::string, commands::YaRaspCommandCreator<commands::FindBase>>{"find", {cli_, output_manager_}}
     );
 };
 

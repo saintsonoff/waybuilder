@@ -21,22 +21,40 @@ std::string_view Help::kHelpText = "help command";
 
 CommandExeStatus Save::Run() {
     if (cli_.Save()) {
-        std::cout << "Save is done" << std::endl;
+        output_manager_.GetStreamRef() << "Save is done" << std::endl;
     } else {
-        std::cout << "Cannot save config or points, check path" << std::endl;
+        output_manager_.GetStreamRef() << "Cannot save config or points, check path" << std::endl;
     }
 
     return CommandExeStatus::CORRECT;
 }
 
 
+CommandExeStatus ChangeLang::Run() {
+    std::string new_lang;
+    std::cin >> new_lang;
+
+    std::string old_lang = cli_.GetLang();
+    cli_.SetLang(new_lang);
+    if (cli_.ScanPoints().status_code != 200) {
+        output_manager_.GetStreamRef() << "Unknowing lang, check yandex langs table" << "\n"
+            << "Actual language: " << old_lang << std::endl;
+        cli_.SetLang(old_lang);
+    }
+
+    output_manager_.GetStreamRef() << "Change language is done" << std::endl;
+
+    return CommandExeStatus::CORRECT;
+};
+
+
 CommandExeStatus ScanPoints::Run() {
     auto resp = cli_.ScanPoints();
 
     if (resp.status_code == 200) {
-        std::cout << "Scan is done" << std::endl;
+        output_manager_.GetStreamRef() << "Scan is done" << std::endl;
     } else {
-        std::cout << "Cannot scan points, check api config or log journal" << std::endl;
+        output_manager_.GetStreamRef() << "Cannot scan points, check api config or log journal" << std::endl;
 
         BOOST_LOG_SEV(cli_.GetLoggerRef(), boost::log::trivial::error)
             << "api request error" << " | " 
@@ -54,18 +72,10 @@ CommandExeStatus ScanWays::Run() {
     auto resp = cli_.ScanPoints();
 
     if (resp.status_code == 200) {
-        std::cout << "Scan is done" << std::endl;
+        output_manager_.GetStreamRef() << "Scan is done" << std::endl;
     } else {
-        std::cout << "Cannot scan points, check api config or log journal" << std::endl;
-
-        BOOST_LOG_SEV(cli_.GetLoggerRef(), boost::log::trivial::error)
-            << "api request error" << " | " 
-            << "response code: " <<  resp.status_code << " | "
-            << "reason: " <<  resp.reason << " | "
-            << "request url: " <<  resp.url << " | "
-            << "text: " <<  resp.text;
+        output_manager_.GetStreamRef() << "Cannot scan points, check api config or log journal" << std::endl;
     }
-
     return CommandExeStatus::CORRECT;
 }
 
@@ -73,8 +83,8 @@ CommandExeStatus ScanWays::Run() {
 CommandExeStatus ListCountry::Run() {
     auto&& country_list = cli_.CountryList();
 
-    if (!cli_.PointsJsonOutput(std::cout, country_list->get(), "country name", "coutry id")) {
-        std::cout << "Get list error" << "\n"
+    if (!output_manager_.PointsJsonOutput(cli_, country_list->get(), "country name", "coutry id")) {
+        output_manager_.GetStreamRef() << "Get list error" << "\n"
             << "try to rescan points" << std::endl;
     }
 
@@ -97,8 +107,8 @@ CommandExeStatus ListRegion::Run() {
         }
 
     }
-    if (!cli_.PointsJsonOutput(std::cout, list, "region name", "region id")) {
-        std::cout << "Can not find region by {" << country_id << "} request" << "\n"
+    if (!output_manager_.PointsJsonOutput(cli_, list, "region name", "region id")) {
+        output_manager_.GetStreamRef() << "Can not find region by {" << country_id << "} request" << "\n"
             << "try to rescan points" << std::endl;
     }
 
@@ -126,8 +136,8 @@ CommandExeStatus ListCity::Run() {
         }
     }
 
-    if (!cli_.PointsJsonOutput(std::cout, list, "city name", "city id")) {
-        std::cout << "Can not find city by {" << country_id 
+    if (!output_manager_.PointsJsonOutput(cli_, list, "city name", "city id")) {
+        output_manager_.GetStreamRef() << "Can not find city by {" << country_id 
             << (region_id.empty() ? "" : " / ") << region_id
             << "} request" << "\n"
             << "try to rescan points" << std::endl;
@@ -156,13 +166,52 @@ CommandExeStatus ListStation::Run() {
         }
     }
 
-    if (!cli_.PointsJsonOutput(std::cout, list, "station name", "station id")) {
-        std::cout << "Can not find station by {" << country_id
+    if (!output_manager_.PointsJsonOutput(cli_, list, "station name", "station id")) {
+        output_manager_.GetStreamRef() << "Can not find station by {" << country_id
             << (region_id.empty() ? "" : " / ") << region_id
             << (city_id.empty() ? "" : " / ") << city_id
             << "} request" << "\n"
             << "try to rescan points" << std::endl;
     }
+
+    return CommandExeStatus::CORRECT;
+}
+
+
+CommandExeStatus ListWay::Run() {
+    std::string from_point_id;
+    std::string to_point_id;
+    std::string date;
+
+    std::cin >> from_point_id >> to_point_id >> date;
+
+    auto resp = cli_.ScanWays(from_point_id, to_point_id, date);
+
+    if (resp.status_code != 200) {
+        output_manager_.GetStreamRef() << "Ways scan error, check log journal" << std::endl;
+        return CommandExeStatus::CORRECT;
+    }
+    
+    nlohmann::json ways_json;
+    try {
+        ways_json = nlohmann::json::parse(resp.text);
+    } catch (nlohmann::json::parse_error& ex) {
+        BOOST_LOG_SEV(cli_.GetLoggerRef(), boost::log::trivial::error)
+            << "parse ways json error " << " | "
+            << "id: " << ex.id << " | "
+            << "text: " << ex.what();
+        output_manager_.GetStreamRef() << "Ways scan error, check log journal" << std::endl;
+        return CommandExeStatus::CORRECT;
+    }
+
+    if (!output_manager_.WaysJsonOutput(cli_, ways_json)) {
+        output_manager_.GetStreamRef() << "Can not find ways by {"
+            << (from_point_id.empty() ? "" : " from point:  " + from_point_id + " / ") 
+            << (to_point_id.empty() ? "" : " to point:  " + to_point_id + " / ") 
+            << (date.empty() ? "" : " date: " + date) 
+            << "} request" << "\n"
+            << "try to rescan points" << std::endl;
+    }        
 
     return CommandExeStatus::CORRECT;
 }
@@ -178,8 +227,8 @@ CommandExeStatus FindCountry::Run() {
 
     auto&& list = cli_.FindCountry(search_str);
 
-    if (!cli_.PointsJsonOutput(std::cout, list, "country name", "coutry id")) {
-        std::cout << "Can not find country by {" << search_str << "} request" << "\n"
+    if (!output_manager_.PointsJsonOutput(cli_, list, "country name", "coutry id")) {
+        output_manager_.GetStreamRef() << "Can not find country by {" << search_str << "} request" << "\n"
             << "try to rescan points" << std::endl;
     }
 
@@ -197,8 +246,8 @@ CommandExeStatus FindRegion::Run() {
 
     auto&& list = cli_.FindRegion(search_str);
 
-    if (!cli_.PointsJsonOutput(std::cout, list, "region name", "region id")) {
-        std::cout << "Can not find region by {" << search_str << "} request" << "\n"
+    if (!output_manager_.PointsJsonOutput(cli_, list, "region name", "region id")) {
+        output_manager_.GetStreamRef() << "Can not find region by {" << search_str << "} request" << "\n"
             << "try to rescan points" << std::endl;
     }
 
@@ -216,8 +265,8 @@ CommandExeStatus FindCity::Run() {
 
     auto&& list = cli_.FindCity(search_str);
 
-    if (!cli_.PointsJsonOutput(std::cout, list, "city name", "city id")) {
-        std::cout << "Can not find city by {" << search_str << "} request" << "\n"
+    if (!output_manager_.PointsJsonOutput(cli_, list, "city name", "city id")) {
+        output_manager_.GetStreamRef() << "Can not find city by {" << search_str << "} request" << "\n"
             << "try to rescan points" << std::endl;
     }
 
@@ -235,8 +284,8 @@ CommandExeStatus FindStation::Run() {
 
     auto&& list = cli_.FindStation(search_str);
 
-    if (!cli_.PointsJsonOutput(std::cout, list, "station name", "station id")) {
-        std::cout << "Can not find station by {" << search_str << "} request" << "\n"
+    if (!output_manager_.PointsJsonOutput(cli_, list, "station name", "station id")) {
+        output_manager_.GetStreamRef() << "Can not find station by {" << search_str << "} request" << "\n"
             << "try to rescan points" << std::endl;
     }
 

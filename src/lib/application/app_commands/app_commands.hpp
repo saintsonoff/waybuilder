@@ -8,6 +8,7 @@
 
 #include <command_module.hpp>
 #include <ya_rasp_cli.hpp>
+#include <output_manager.hpp>
 
 namespace waybuilder {
 
@@ -17,7 +18,36 @@ namespace commands {
 
 const std::string kAllValue = "all";
 
-class Help : public ::commands::CommandBase {
+class YaRaspApiProjection : public ::commands::CommandBase {
+ public:
+    YaRaspApiProjection(YaRaspCli& cli, YaRaspOutputManager& output_manager)
+        : cli_(cli), output_manager_(output_manager) {};
+
+ protected:
+    YaRaspCli& cli_;
+    YaRaspOutputManager& output_manager_;
+};
+   
+
+template<std::derived_from<waybuilder::commands::YaRaspApiProjection> YaRaspCommand>
+class YaRaspCommandCreator : public ::commands::CommandCreatorBase {
+ public:
+    YaRaspCommandCreator(YaRaspCli& cli, YaRaspOutputManager& output_manager)
+        : cli_{cli}, output_manager_(output_manager) {  };
+ public:
+    std::shared_ptr<::commands::CommandBase> Create() override {
+        return std::make_shared<YaRaspCommand>(cli_, output_manager_);
+    };
+ private:
+    YaRaspCli& cli_;
+    YaRaspOutputManager& output_manager_;
+};
+
+
+class Help : public YaRaspApiProjection {
+ public:
+    using YaRaspApiProjection::YaRaspApiProjection;
+
  public:
     CommandExeStatus Run() override { 
         std::cout << kHelpText << std::endl;
@@ -34,33 +64,46 @@ class Quit : public ::commands::CommandBase {
 };
 
 
-class YaRaspApiProjection : public ::commands::CommandBase {
- public:
-    YaRaspApiProjection(YaRaspCli& cli) : cli_(cli) {};
-
- protected:
-    YaRaspCli& cli_;
-};
-
-
-template<std::derived_from<waybuilder::commands::YaRaspApiProjection> YaRaspCommand>
-class YaRaspCommandCreator : public ::commands::CommandCreatorBase {
- public:
-    YaRaspCommandCreator(YaRaspCli& cli) : cli_{cli} {};
- public:
-    std::shared_ptr<::commands::CommandBase> Create() override {
-        return std::make_shared<YaRaspCommand>(cli_);
-    };
-    private:
-    YaRaspCli& cli_;
-};
-
-
 class Save : public YaRaspApiProjection {
  public:
     using YaRaspApiProjection::YaRaspApiProjection;
  public:
     CommandExeStatus Run() override;
+};
+
+
+class ChangeBase : public YaRaspApiProjection {
+ public:
+    using YaRaspApiProjection::YaRaspApiProjection;
+};
+
+
+class ChangeLang : public ChangeBase {
+ public:
+    using ChangeBase::ChangeBase;
+ public:
+    CommandExeStatus Run() override;
+};
+
+
+template<>
+class YaRaspCommandCreator<ChangeBase> : public ::commands::CommandCreatorBase {
+ public:
+    YaRaspCommandCreator(YaRaspCli& cli, YaRaspOutputManager& output_manager)
+        : cli_{cli}, output_manager_{output_manager} {  };
+ public:
+    std::shared_ptr<::commands::CommandBase> Create() override {
+        std::string change_type;
+        std::cin >> change_type;
+        if (change_type == "lang") {
+            return std::make_shared<ChangeLang>(cli_, output_manager_);
+        } else {
+            return std::make_shared<::commands::InvalidCommand>();
+        }
+    };
+ private:
+    YaRaspCli& cli_;
+    YaRaspOutputManager& output_manager_;
 };
 
 
@@ -89,22 +132,23 @@ class ScanWays : public ScanBase {
 template<>
 class YaRaspCommandCreator<ScanBase> : public ::commands::CommandCreatorBase {
  public:
-    YaRaspCommandCreator(YaRaspCli& cli) : cli_{cli} {};
+    YaRaspCommandCreator(YaRaspCli& cli, YaRaspOutputManager& output_manager)
+        : cli_{cli}, output_manager_{output_manager} {  };
  public:
     std::shared_ptr<::commands::CommandBase> Create() override {
         std::string scan_type;
         std::cin >> scan_type;
         if (scan_type == "way") {
-            return std::make_shared<ScanWays>(cli_);
+            return std::make_shared<ScanWays>(cli_, output_manager_);
         } else if (scan_type == "points") {
-            return std::make_shared<ScanPoints>(cli_);
+            return std::make_shared<ScanPoints>(cli_, output_manager_);
         } else {
             return std::make_shared<::commands::InvalidCommand>();
         }
     };
  private:
     YaRaspCli& cli_;
-
+    YaRaspOutputManager& output_manager_;
 };
 
 
@@ -146,28 +190,40 @@ class ListStation : public ListBase {
 };
 
 
+class ListWay : public ListBase {
+ public:
+    using ListBase::ListBase;
+ public:
+    CommandExeStatus Run() override;
+};
+
+
 template<>
 class YaRaspCommandCreator<ListBase> : public ::commands::CommandCreatorBase {
  public:
-    YaRaspCommandCreator(YaRaspCli& cli) : cli_{cli} {};
+    YaRaspCommandCreator(YaRaspCli& cli, YaRaspOutputManager& output_manager)
+        : cli_{cli}, output_manager_{output_manager} {};
  public:
     std::shared_ptr<::commands::CommandBase> Create() override {
         std::string list_of;
         std::cin >> list_of;
         if (list_of == "country") {
-            return std::make_shared<ListCountry>(cli_);
+            return std::make_shared<ListCountry>(cli_, output_manager_);
         } else if (list_of == "region") {
-            return std::make_shared<ListRegion>(cli_);
+            return std::make_shared<ListRegion>(cli_, output_manager_);
         } else if (list_of == "city") {
-            return std::make_shared<ListCity>(cli_);
+            return std::make_shared<ListCity>(cli_, output_manager_);
         } else if (list_of == "station") {
-            return std::make_shared<ListStation>(cli_);
+            return std::make_shared<ListStation>(cli_, output_manager_);
+        } else if (list_of == "way") {
+            return std::make_shared<ListWay>(cli_, output_manager_);
         } else {
             return std::make_shared<::commands::InvalidCommand>();
         }
     };
  private:
     YaRaspCli& cli_;
+    YaRaspOutputManager& output_manager_;
 };
 
 
@@ -212,25 +268,27 @@ class FindStation : public FindBase {
 template<>
 class YaRaspCommandCreator<FindBase> : public ::commands::CommandCreatorBase {
  public:
-    YaRaspCommandCreator(YaRaspCli& cli) : cli_{cli} {};
+    YaRaspCommandCreator(YaRaspCli& cli, YaRaspOutputManager& output_manager)
+        : cli_{cli}, output_manager_(output_manager) {  };
  public:
     std::shared_ptr<::commands::CommandBase> Create() override {
         std::string list_of;
         std::cin >> list_of;
         if (list_of == "country") {
-            return std::make_shared<FindCountry>(cli_);
+            return std::make_shared<FindCountry>(cli_, output_manager_);
         } else if (list_of == "region") {
-            return std::make_shared<FindRegion>(cli_);
+            return std::make_shared<FindRegion>(cli_, output_manager_);
         } else if (list_of == "city") {
-            return std::make_shared<FindCity>(cli_);
+            return std::make_shared<FindCity>(cli_, output_manager_);
         } else if (list_of == "station") {
-            return std::make_shared<FindStation>(cli_);
+            return std::make_shared<FindStation>(cli_, output_manager_);
         } else {
             return std::make_shared<::commands::InvalidCommand>();
         }
     };
  private:
     YaRaspCli& cli_;
+    YaRaspOutputManager& output_manager_;
 };
 
 
