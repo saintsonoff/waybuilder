@@ -1,6 +1,7 @@
 #ifndef _APP_COMMANDS_HPP_
 #define _APP_COMMANDS_HPP_
 
+#include <sstream>
 #include <string_view>
 #include <iostream>
 #include <concepts>
@@ -120,15 +121,6 @@ class ScanPoints : public ScanBase {
     CommandExeStatus Run() override;
 };
 
-
-class ScanWays : public ScanBase {
- public:
-    using ScanBase::ScanBase;
- public:
-    CommandExeStatus Run() override;
-};
-
-
 template<>
 class YaRaspCommandCreator<ScanBase> : public ::commands::CommandCreatorBase {
  public:
@@ -138,9 +130,7 @@ class YaRaspCommandCreator<ScanBase> : public ::commands::CommandCreatorBase {
     std::shared_ptr<::commands::CommandBase> Create() override {
         std::string scan_type;
         std::cin >> scan_type;
-        if (scan_type == "way") {
-            return std::make_shared<ScanWays>(cli_, output_manager_);
-        } else if (scan_type == "points") {
+        if (scan_type == "points") {
             return std::make_shared<ScanPoints>(cli_, output_manager_);
         } else {
             return std::make_shared<::commands::InvalidCommand>();
@@ -195,6 +185,9 @@ class ListWay : public ListBase {
     using ListBase::ListBase;
  public:
     CommandExeStatus Run() override;
+ private:
+    std::stringstream GetCurrentTime(int year_offset = 0, int month_offset = 0, int day_offset = 0,
+        int hour_offset = 0, int minut_offset = 0, int second_offset = 0);
 };
 
 

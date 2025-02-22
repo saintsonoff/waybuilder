@@ -2,8 +2,6 @@
 
 #include <console_cli_app.hpp>
 
-#include <ya_rasp_cli.hpp>
-
 int main(int, char**) {
     std::cout << "labwork6" << std::endl;
 

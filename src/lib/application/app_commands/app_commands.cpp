@@ -2,10 +2,14 @@
 #include "nlohmann/json_fwd.hpp"
 
 
+#include <cstddef>
 #include <iomanip>
+#include <sstream>
 #include <string_view>
 #include <memory>
 #include <iostream>
+#include <chrono>
+#include <ctime>
 
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/trivial.hpp>
@@ -36,13 +40,13 @@ CommandExeStatus ChangeLang::Run() {
 
     std::string old_lang = cli_.GetLang();
     cli_.SetLang(new_lang);
-    if (cli_.ScanPoints().status_code != 200) {
+    if (cli_.ScanPoints().status_code == 200) {
+        output_manager_.GetStreamRef() << "Change language is done" << std::endl;
+    } else {
         output_manager_.GetStreamRef() << "Unknowing lang, check yandex langs table" << "\n"
             << "Actual language: " << old_lang << std::endl;
         cli_.SetLang(old_lang);
     }
-
-    output_manager_.GetStreamRef() << "Change language is done" << std::endl;
 
     return CommandExeStatus::CORRECT;
 };
@@ -64,18 +68,6 @@ CommandExeStatus ScanPoints::Run() {
             << "text: " <<  resp.text;
     }
 
-    return CommandExeStatus::CORRECT;
-}
-
-
-CommandExeStatus ScanWays::Run() {
-    auto resp = cli_.ScanPoints();
-
-    if (resp.status_code == 200) {
-        output_manager_.GetStreamRef() << "Scan is done" << std::endl;
-    } else {
-        output_manager_.GetStreamRef() << "Cannot scan points, check api config or log journal" << std::endl;
-    }
     return CommandExeStatus::CORRECT;
 }
 
@@ -178,12 +170,39 @@ CommandExeStatus ListStation::Run() {
 }
 
 
+std::stringstream ListWay::GetCurrentTime(int year_offset, int month_offset, int day_offset,
+        int hour_offset, int minut_offset, int second_offset) {
+    auto current_timepoint = std::chrono::system_clock::now();
+    std::time_t now_time_t = std::chrono::system_clock::to_time_t(current_timepoint);
+
+    std::tm* current_time_ptr = std::localtime(&now_time_t);
+    std::stringstream time_conversion_stream;
+    
+    current_time_ptr->tm_year += year_offset;
+    current_time_ptr->tm_mon += month_offset;
+    current_time_ptr->tm_mday += day_offset;
+
+    current_time_ptr->tm_hour += hour_offset;
+    current_time_ptr->tm_min += minut_offset;
+    current_time_ptr->tm_sec += second_offset;
+
+    time_conversion_stream << std::put_time(current_time_ptr, "%Y-%m-%d %H:%M");
+    return time_conversion_stream;
+}
+
 CommandExeStatus ListWay::Run() {
     std::string from_point_id;
     std::string to_point_id;
     std::string date;
 
     std::cin >> from_point_id >> to_point_id >> date;
+
+
+    if (date == "today") {
+        GetCurrentTime() >> date;
+    } else if (date == "tomorrow") {
+        GetCurrentTime(0, 0, 1) >> date;
+    }
 
     auto resp = cli_.ScanWays(from_point_id, to_point_id, date);
 

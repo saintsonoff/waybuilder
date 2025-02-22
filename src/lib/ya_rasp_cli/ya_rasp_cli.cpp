@@ -230,6 +230,7 @@ void YaRaspCli::LogConfigurate(const std::string& log_dir_path) {
     logging::add_file_log(
         keywords::file_name = log_dir_path + "/log_%Y-%m-%d_%H-%M-%S.log",
         keywords::rotation_size = 10 * 1024 * 1024,
+        logging::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
         keywords::format = (
             expr::stream
                 << expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S")
