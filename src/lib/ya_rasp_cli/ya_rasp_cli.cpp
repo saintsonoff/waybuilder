@@ -37,7 +37,7 @@ namespace waybuilder {
 
 YaRaspCli::YaRaspCli(const std::string& api_key, const std::string& point_list_path,
     const std::string& api_cfg_path, const std::string& api_lang, const std::string& log_dir_path)
- : api_key_{api_key}, point_list_path_{point_list_path}, api_cfg_path_{api_cfg_path}, api_lang_(api_lang) {
+ : api_key_{api_key}, point_list_path_{point_list_path}, api_cfg_path_{api_cfg_path}, api_lang_(api_lang), log_dir_path_(log_dir_path) {
     std::ifstream point_list_file{point_list_path};
     if (point_list_file.is_open()) {
         point_list_ = nlohmann::json::parse(point_list_file);
@@ -47,7 +47,7 @@ YaRaspCli::YaRaspCli(const std::string& api_key, const std::string& point_list_p
 }
 
 
-YaRaspCli::YaRaspCli(const std::string& api_cfg_path, const std::string& log_dir_path) : api_cfg_path_(api_cfg_path) {
+YaRaspCli::YaRaspCli(const std::string& api_cfg_path, const std::string& log_dir_path) : api_cfg_path_(api_cfg_path), log_dir_path_(log_dir_path) {
     LoadCfg();
     LogConfigurate(log_dir_path);
 }
@@ -84,9 +84,9 @@ cpr::Response YaRaspCli::ScanWays(const std::string& from_point, const std::stri
     static const std::string_view kGetWaysUrl = "search";
 
     std::string offset_str{offset ? std::to_string(offset) : ""};
-    std::string transfers_str{transfers ? std::to_string(transfers) : ""};
+    std::string transfers_str{transfers ? "true" : ""};
     std::string limit_str{limit ? std::to_string(offset) : ""};
-    std::string add_days_mask_str{add_days_mask ? std::to_string(add_days_mask) : ""};
+    std::string add_days_mask_str{add_days_mask ? "true" : "false"};
 
     cpr::Response resp = cpr::Get(
         cpr::Url{
@@ -228,7 +228,7 @@ void YaRaspCli::LogConfigurate(const std::string& log_dir_path) {
     }
 
     logging::add_file_log(
-        keywords::file_name = log_dir_path + "/log_%Y-%m-%d_%H-%M-%S.log",
+        keywords::file_name = log_dir_path  + "/log_%Y-%m-%d_%H-%M-%S.log",
         keywords::rotation_size = 10 * 1024 * 1024,
         logging::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
         keywords::format = (

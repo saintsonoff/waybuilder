@@ -19,6 +19,8 @@ class YaRaspOutputManager {
     bool PointsJsonOutput(YaRaspCli& cli, const nlohmann::json& points_json,
         const std::string& name_colom, const std::string& id_colom);
 
+    void ShedueFlightOutput(const nlohmann::json& flight_json);
+
     bool WaysJsonOutput(YaRaspCli& cli, const nlohmann::json& ways_json);
 
  public:

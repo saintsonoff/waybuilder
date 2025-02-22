@@ -1,11 +1,9 @@
 #include "app_commands.hpp"
-#include "nlohmann/json_fwd.hpp"
-
 
 #include <cstddef>
 #include <iomanip>
 #include <sstream>
-#include <string_view>
+#include <string>
 #include <memory>
 #include <iostream>
 #include <chrono>
@@ -15,12 +13,44 @@
 #include <boost/log/trivial.hpp>
 
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 namespace waybuilder {
 
 namespace commands {
 
-std::string_view Help::kHelpText = "help command";
+std::string Help::kHelpText =
+R"help(
+* help 
+    - this message
+* save
+    - save config
+
+* change lang [lang] "lang in code by  ISO 639 & ISO 3166 | in format xx_XX"
+    - change language of response
+
+* list ways [from_id] [to_id] [date] "date in format [xxxx-xx-xx, today, tomorrow]"
+    - get list of avalible ways
+* list country
+    - get list of avalible coutnry
+* list region [country_id]
+    - get list of avalible regions in current coutnry
+* list city [country_id] [region_id]
+    - get list of avalible cities in current region of current coutnry 
+* list station [country_id] [region_id] [city_id]
+    - get list of avalible stations in current region of current coutnry of current city 
+* find country [find_substring]
+    - get list of avalible coutry by similar request 
+* find region [find_substring]
+    - get list of avalible region by similar request 
+* find city [find_substring]
+    - get list of avalible cities by similar request 
+* find station [find_substring]
+    - get list of avalible stations by similar request
+
+* logdir
+    - path to directory to log journal
+)help";
 
 
 CommandExeStatus Save::Run() {
@@ -165,72 +195,6 @@ CommandExeStatus ListStation::Run() {
             << "} request" << "\n"
             << "try to rescan points" << std::endl;
     }
-
-    return CommandExeStatus::CORRECT;
-}
-
-
-std::stringstream ListWay::GetCurrentTime(int year_offset, int month_offset, int day_offset,
-        int hour_offset, int minut_offset, int second_offset) {
-    auto current_timepoint = std::chrono::system_clock::now();
-    std::time_t now_time_t = std::chrono::system_clock::to_time_t(current_timepoint);
-
-    std::tm* current_time_ptr = std::localtime(&now_time_t);
-    std::stringstream time_conversion_stream;
-    
-    current_time_ptr->tm_year += year_offset;
-    current_time_ptr->tm_mon += month_offset;
-    current_time_ptr->tm_mday += day_offset;
-
-    current_time_ptr->tm_hour += hour_offset;
-    current_time_ptr->tm_min += minut_offset;
-    current_time_ptr->tm_sec += second_offset;
-
-    time_conversion_stream << std::put_time(current_time_ptr, "%Y-%m-%d %H:%M");
-    return time_conversion_stream;
-}
-
-CommandExeStatus ListWay::Run() {
-    std::string from_point_id;
-    std::string to_point_id;
-    std::string date;
-
-    std::cin >> from_point_id >> to_point_id >> date;
-
-
-    if (date == "today") {
-        GetCurrentTime() >> date;
-    } else if (date == "tomorrow") {
-        GetCurrentTime(0, 0, 1) >> date;
-    }
-
-    auto resp = cli_.ScanWays(from_point_id, to_point_id, date);
-
-    if (resp.status_code != 200) {
-        output_manager_.GetStreamRef() << "Ways scan error, check log journal" << std::endl;
-        return CommandExeStatus::CORRECT;
-    }
-    
-    nlohmann::json ways_json;
-    try {
-        ways_json = nlohmann::json::parse(resp.text);
-    } catch (nlohmann::json::parse_error& ex) {
-        BOOST_LOG_SEV(cli_.GetLoggerRef(), boost::log::trivial::error)
-            << "parse ways json error " << " | "
-            << "id: " << ex.id << " | "
-            << "text: " << ex.what();
-        output_manager_.GetStreamRef() << "Ways scan error, check log journal" << std::endl;
-        return CommandExeStatus::CORRECT;
-    }
-
-    if (!output_manager_.WaysJsonOutput(cli_, ways_json)) {
-        output_manager_.GetStreamRef() << "Can not find ways by {"
-            << (from_point_id.empty() ? "" : " from point:  " + from_point_id + " / ") 
-            << (to_point_id.empty() ? "" : " to point:  " + to_point_id + " / ") 
-            << (date.empty() ? "" : " date: " + date) 
-            << "} request" << "\n"
-            << "try to rescan points" << std::endl;
-    }        
 
     return CommandExeStatus::CORRECT;
 }

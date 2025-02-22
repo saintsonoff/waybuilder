@@ -27,10 +27,11 @@ const nlohmann::json::json_pointer YaRaspJsonPtr::kIntervalFlights{"/interval_se
 const nlohmann::json::json_pointer YaRaspJsonPtr::kIntervalDepartureDate{"/start_date"};
 
 const nlohmann::json::json_pointer YaRaspJsonPtr::kScheduleFlights{"/segments"};
-const nlohmann::json::json_pointer YaRaspJsonPtr::kScheduleFlightName{"/thread/title"};
-const nlohmann::json::json_pointer YaRaspJsonPtr::kScheduleFlightId{"/thread/number"};
-const nlohmann::json::json_pointer YaRaspJsonPtr::kVehicleType{"/thread/transport_type"};
-const nlohmann::json::json_pointer YaRaspJsonPtr::kVehicleName{"/thread/vehicle"};
+
+const nlohmann::json::json_pointer YaRaspJsonPtr::kScheduleFlightName{"/title"};
+const nlohmann::json::json_pointer YaRaspJsonPtr::kScheduleFlightId{"/number"};
+const nlohmann::json::json_pointer YaRaspJsonPtr::kVehicleType{"/transport_type"};
+const nlohmann::json::json_pointer YaRaspJsonPtr::kVehicleName{"/vehicle"};
 const nlohmann::json::json_pointer YaRaspJsonPtr::kScheduleDepartureDate{"/arrival"};
 const nlohmann::json::json_pointer YaRaspJsonPtr::kScheduleArrivalDate{"/departure"};
 

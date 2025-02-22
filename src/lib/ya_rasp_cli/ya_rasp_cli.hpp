@@ -54,9 +54,10 @@ class YaRaspCli {
 
  public:
     boost::log::sources::logger& GetLoggerRef() { return logger_; };
+    const std::string& GetLoggerPath() const { return log_dir_path_; };
 
  private:
-    std::string BuildRequest(std::string_view req_str, 
+    std::string BuildRequest(std::string_view req_str,
       std::initializer_list<std::pair<std::string_view, std::string_view>> args);
 
     void LogConfigurate(const std::string& log_dir_path);
@@ -75,6 +76,7 @@ class YaRaspCli {
  private: 
     std::string api_cfg_path_;
     std::string point_list_path_;
+    std::string log_dir_path_;
 };
 
 } // namespace waybuilder

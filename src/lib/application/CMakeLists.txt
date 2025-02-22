@@ -4,6 +4,7 @@ add_subdirectory(app_commands)
 add_library(console_cli_app STATIC console_cli_app.cpp)
 
 target_link_libraries(console_cli_app PRIVATE app_commands)
+target_link_libraries(console_cli_app PUBLIC lru_cache)
 target_link_libraries(console_cli_app PUBLIC command_fabric)
 target_link_libraries(console_cli_app PUBLIC ya_rasp_cli)
 target_link_libraries(console_cli_app PUBLIC output_manager)

@@ -61,6 +61,9 @@ bool YaRaspOutputManager::WaysJsonOutput(YaRaspCli& cli, const nlohmann::json& w
         output_stream_ << "Result count: " << ways_json.at(YaRaspJsonPtr::kResultCount) << std::endl;
 
         output_stream_ << "\n";
+
+        if (ways_json.at(YaRaspJsonPtr::kResultCount) == 0) 
+            return false;
     } else {
         BOOST_LOG_SEV(cli.GetLoggerRef(), boost::log::trivial::error) 
             << "output ways error" << " | "
@@ -102,26 +105,12 @@ bool YaRaspOutputManager::WaysJsonOutput(YaRaspCli& cli, const nlohmann::json& w
     }
 
     // Schedule flights
-    if (ways_json.contains(YaRaspJsonPtr::kScheduleFlights) && ways_json.contains(YaRaspJsonPtr::kScheduleFlights)) {
+    if (ways_json.contains(YaRaspJsonPtr::kScheduleFlights) && ways_json.at(YaRaspJsonPtr::kScheduleFlights).size()) {
         output_stream_ << "Schedule flights list: " << std::endl;
         for (auto& flight : ways_json.at(YaRaspJsonPtr::kScheduleFlights)) {
             try {                    
                 output_stream_ << "[" <<  flight_number << "]" << "\n";
-                output_stream_
-                    << std::setw(kInfoIdent) << flight.at(YaRaspJsonPtr::kScheduleFlightName).get_ref<const std::string&>() << "\n"
-                    << std::setw(kInfoIdent) << "flight name: " << flight.at(YaRaspJsonPtr::kScheduleFlightId).get_ref<const std::string&>() << "\n"
-                    << std::setw(kInfoIdent) << "transport type: " << flight.at(YaRaspJsonPtr::kVehicleType).get_ref<const std::string&>() << "\n"
-                    << (!flight.at(YaRaspJsonPtr::kVehicleName).is_null() ? ("trasport model: " + flight.at(YaRaspJsonPtr::kVehicleName).get_ref<const std::string&>()) + "\n" : "")
-                    << std::setw(kInfoIdent) << "departure date: " << flight.at(YaRaspJsonPtr::kScheduleDepartureDate).get_ref<const std::string&>() << "\n"
-                    << std::setw(kInfoIdent) << "arrival date: " << flight.at(YaRaspJsonPtr::kScheduleArrivalDate).get_ref<const std::string&>() << "\n"
-
-                    << std::setw(kInfoIdent) << "departure point: " << flight.at(kFromJsonPtr / YaRaspJsonPtr::kPointName).get_ref<const std::string&>() << "\n" 
-                    << std::setw(kInfoIdent) << std::setw(kInfoIdent)
-                        << "departure station type: " << flight.at(kFromJsonPtr / YaRaspJsonPtr::kStationType).get_ref<const std::string&>() << "\n" 
-                    << std::setw(kInfoIdent) << "arrival point: " << flight.at(kToJsonPtr / YaRaspJsonPtr::kPointName).get_ref<const std::string&>() << "\n" 
-                    << std::setw(kInfoIdent) << std::setw(kInfoIdent)
-                        << "arrival station type: " << flight.at(kToJsonPtr / YaRaspJsonPtr::kStationType).get_ref<const std::string&>() << "\n" 
-                    << std::endl;
+                ShedueFlightOutput(flight);
             } catch (nlohmann::json::out_of_range& ex) {
                 BOOST_LOG_SEV(cli.GetLoggerRef(), boost::log::trivial::error) 
                     << "output ways error" << " | " 
@@ -137,5 +126,58 @@ bool YaRaspOutputManager::WaysJsonOutput(YaRaspCli& cli, const nlohmann::json& w
     return true;
 }
 
+
+void YaRaspOutputManager::ShedueFlightOutput(const nlohmann::json& flight_json) {
+    constexpr size_t kInfoIdent = 4;
+
+    const static nlohmann::json::json_pointer kFromJsonPtr{"/from"};
+    const static nlohmann::json::json_pointer kToJsonPtr{"/to"};
+    const static nlohmann::json::json_pointer kHasTransfers{"/has_transfers"};
+    const static nlohmann::json::json_pointer kTransfers{"/details"};
+    const static nlohmann::json::json_pointer kDepartureFrom{"/departure_from"};
+    const static nlohmann::json::json_pointer kArrivalTo{"/arrival_to"};
+    const static nlohmann::json::json_pointer kIsTransfer{"/is_transfer"};
+    const static nlohmann::json::json_pointer kTransferPoint{"/transfer_point"};
+
+    const static nlohmann::json::json_pointer kNonTransferFlightInfoPrefix{"/thread"};
+
+    if (flight_json.contains(kHasTransfers) && flight_json.at(kHasTransfers)) {
+        for (auto&& transfer : flight_json.at(kTransfers)) {
+            if (transfer.contains(kIsTransfer) && transfer.at(kIsTransfer)) {
+                output_stream_
+                    << std::setw(kInfoIdent) << std::setw(kInfoIdent) << "transfer point ==> " << transfer.at(kTransferPoint / YaRaspJsonPtr::kPointName).get_ref<const std::string&>() << "\n";
+            } else {
+                output_stream_
+                    << std::setw(kInfoIdent) << transfer.at(kNonTransferFlightInfoPrefix / YaRaspJsonPtr::kScheduleFlightName).get_ref<const std::string&>() << "\n"
+                    << std::setw(kInfoIdent) << "flight name: " << transfer.at(kNonTransferFlightInfoPrefix / YaRaspJsonPtr::kScheduleFlightId).get_ref<const std::string&>() << "\n"
+                    << std::setw(kInfoIdent) << "transport type: " << transfer.at(kNonTransferFlightInfoPrefix / YaRaspJsonPtr::kVehicleType).get_ref<const std::string&>() << "\n"
+                    << (!transfer.at(kNonTransferFlightInfoPrefix / YaRaspJsonPtr::kVehicleName).is_null() ? ("trasport model: " + transfer.at(kNonTransferFlightInfoPrefix / YaRaspJsonPtr::kVehicleName).get_ref<const std::string&>()) + "\n" : "")
+                    << std::setw(kInfoIdent) << "departure date: " << transfer.at(YaRaspJsonPtr::kScheduleDepartureDate).get_ref<const std::string&>() << "\n"
+                    << std::setw(kInfoIdent) << "arrival date: " << transfer.at(YaRaspJsonPtr::kScheduleArrivalDate).get_ref<const std::string&>() << "\n"
+
+                    << std::setw(kInfoIdent) << "departure point: " << transfer.at(kFromJsonPtr / YaRaspJsonPtr::kPointName).get_ref<const std::string&>() << "\n" 
+                    << std::setw(kInfoIdent) << std::setw(kInfoIdent)
+                    << std::setw(kInfoIdent) << "arrival point: " << transfer.at(kToJsonPtr / YaRaspJsonPtr::kPointName).get_ref<const std::string&>() << "\n" 
+                    << std::endl;
+            }
+        }
+    } else {
+        output_stream_
+            << std::setw(kInfoIdent) << flight_json.at(kNonTransferFlightInfoPrefix / YaRaspJsonPtr::kScheduleFlightName).get_ref<const std::string&>() << "\n"
+            << std::setw(kInfoIdent) << "flight name: " << flight_json.at(kNonTransferFlightInfoPrefix / YaRaspJsonPtr::kScheduleFlightId).get_ref<const std::string&>() << "\n"
+            << std::setw(kInfoIdent) << "transport type: " << flight_json.at(kNonTransferFlightInfoPrefix / YaRaspJsonPtr::kVehicleType).get_ref<const std::string&>() << "\n"
+            << (!flight_json.at(kNonTransferFlightInfoPrefix / YaRaspJsonPtr::kVehicleName).is_null() ? ("trasport model: " + flight_json.at(kNonTransferFlightInfoPrefix / YaRaspJsonPtr::kVehicleName).get_ref<const std::string&>()) + "\n" : "")
+            << std::setw(kInfoIdent) << "departure date: " << flight_json.at(YaRaspJsonPtr::kScheduleDepartureDate).get_ref<const std::string&>() << "\n"
+            << std::setw(kInfoIdent) << "arrival date: " << flight_json.at(YaRaspJsonPtr::kScheduleArrivalDate).get_ref<const std::string&>() << "\n"
+
+            << std::setw(kInfoIdent) << "departure point: " << flight_json.at(kFromJsonPtr / YaRaspJsonPtr::kPointName).get_ref<const std::string&>() << "\n" 
+            << std::setw(kInfoIdent) << std::setw(kInfoIdent)
+                << "departure station type: " << flight_json.at(kFromJsonPtr / YaRaspJsonPtr::kStationType).get_ref<const std::string&>() << "\n" 
+            << std::setw(kInfoIdent) << "arrival point: " << flight_json.at(kToJsonPtr / YaRaspJsonPtr::kPointName).get_ref<const std::string&>() << "\n" 
+            << std::setw(kInfoIdent) << std::setw(kInfoIdent)
+                << "arrival station type: " << flight_json.at(kToJsonPtr / YaRaspJsonPtr::kStationType).get_ref<const std::string&>() << "\n" 
+            << std::endl;
+    }
+}
 
 } // namespace waybuilder

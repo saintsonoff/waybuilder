@@ -31,8 +31,9 @@ void Application<ApplicationCategories::CONSOLE_CLI>::CommandRegistrate() {
         std::pair<std::string, commands::YaRaspCommandCreator<commands::Save>>{"save", {cli_, output_manager_}},
         std::pair<std::string, commands::YaRaspCommandCreator<commands::ChangeBase>>{"change", {cli_, output_manager_}},
         std::pair<std::string, commands::YaRaspCommandCreator<commands::ScanBase>>{"scan", {cli_, output_manager_}},
-        std::pair<std::string, commands::YaRaspCommandCreator<commands::ListBase>>{"list", {cli_, output_manager_}},
-        std::pair<std::string, commands::YaRaspCommandCreator<commands::FindBase>>{"find", {cli_, output_manager_}}
+        std::pair<std::string, commands::YaRaspApiListCreator<commands::ListBase, CacheType>>{"list", {cli_, output_manager_, cache_}},
+        std::pair<std::string, commands::YaRaspCommandCreator<commands::FindBase>>{"find", {cli_, output_manager_}},
+        std::pair<std::string, commands::YaRaspCommandCreator<commands::Logdir>>{"logdir", {cli_, output_manager_}}
     );
 };
 
