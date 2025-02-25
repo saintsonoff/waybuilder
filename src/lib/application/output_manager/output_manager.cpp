@@ -5,7 +5,7 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/sources/logger.hpp>
 
-#include <nlohmann/detail/json_pointer.hpp>
+#include <nlohmann/json.hpp>
 
 #include <ya_rasp_cli.hpp>
 #include <ya_rasp_json_ptr.hpp>

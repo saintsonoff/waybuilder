@@ -13,12 +13,8 @@
 #include <ostream>
 
 #include <nlohmann/json.hpp>
-#include <nlohmann/json_fwd.hpp>
 
 #include <cpr/cpr.h>
-#include <cpr/api.h>
-#include <cpr/cprtypes.h>
-#include <cpr/response.h>
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
@@ -31,7 +27,7 @@
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/sources/severity_feature.hpp>
 
-#include "ya_rasp_json_ptr.hpp"
+#include <ya_rasp_json_ptr.hpp>
 
 namespace waybuilder {
 

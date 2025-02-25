@@ -6,7 +6,6 @@
 #include <optional>
 #include <functional>
 
-#include <nlohmann/json_fwd.hpp>
 #include <nlohmann/json.hpp>
 #include <cpr/cpr.h>
 #include <boost/log/sources/logger.hpp>

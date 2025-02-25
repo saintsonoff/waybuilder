@@ -1,12 +1,12 @@
 #include "console_cli_app.hpp"
-#include "application.hpp"
-#include "output_manager.hpp"
 
 #include <utility>
 #include <string>
 
-#include <app_commands.hpp>
 #include <command_module.hpp>
+
+#include <app_commands.hpp>
+#include <output_manager.hpp>
 
 namespace waybuilder {
 

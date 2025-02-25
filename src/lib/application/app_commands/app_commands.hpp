@@ -1,8 +1,6 @@
 #ifndef _APP_COMMANDS_HPP_
 #define _APP_COMMANDS_HPP_
 
-#include "nlohmann/json_fwd.hpp"
-#include "ya_rasp_json_ptr.hpp"
 #include <array>
 #include <algorithm>
 #include <cstddef>
@@ -24,6 +22,8 @@
 #include <vector>
 #include <queue>
 
+#include "nlohmann/json.hpp"
+
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/trivial.hpp>
 
@@ -31,6 +31,8 @@
 #include <ya_rasp_cli.hpp>
 #include <output_manager.hpp>
 #include <lru_cache.hpp>
+
+#include <ya_rasp_json_ptr.hpp>
 
 namespace waybuilder {
 
@@ -399,7 +401,7 @@ class FindStation : public FindBase {
     CommandExeStatus Run() override;
 };
 
-
+#if 0
 template<typename CacherType>
 class FindWay : public ListBase {
  private:
@@ -776,6 +778,8 @@ CommandExeStatus FindWay<CacherType>::Run() {
     return ListWay<CacherType>{cli_, output_manager_, cache_, from_point_id_, to_point_id_, date_}.Run();
 }
 
+#endif // FindWay 0
+
 
 template<std::derived_from<FindBase> YaRaspListComand, typename CacherType>
 class YaRaspApiFindCreator : public ::commands::CommandCreatorBase {
@@ -795,8 +799,12 @@ class YaRaspApiFindCreator : public ::commands::CommandCreatorBase {
             return std::make_shared<FindCity>(cli_, output_manager_);
         } else if (find_of == "station") {
             return std::make_shared<FindStation>(cli_, output_manager_);
-        // } else if (find_of == "way") {
-        //     return std::make_shared<FindWay<CacherType>>(cli_, output_manager_, cache_);
+
+#if 0
+        } else if (find_of == "way") {
+            return std::make_shared<FindWay<CacherType>>(cli_, output_manager_, cache_);
+#endif // FindWay 0
+
         } else {
             return std::make_shared<::commands::InvalidCommand>();
         }
