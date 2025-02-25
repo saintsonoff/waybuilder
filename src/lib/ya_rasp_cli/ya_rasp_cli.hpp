@@ -13,6 +13,13 @@
 
 namespace waybuilder {
 
+namespace __detail {
+
+using wjson = nlohmann::basic_json<std::map, std::vector, std::wstring>;
+
+} // namespace __detail
+
+
 class YaRaspCli {
  public:
     YaRaspCli(const std::string& api_key, const std::string& point_list_path,

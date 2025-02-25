@@ -11,11 +11,11 @@ namespace waybuilder {
 
 namespace __detail {
 
-template<typename KeyType, typename ValueType, size_t CacheSize>
+template<typename KeyType, typename ValueType, size_t CacheSize,
+    typename CacheContType = std::unordered_map<KeyType, std::pair<ValueType, typename std::list<KeyType>::iterator>>>
 class LruCache {
  private:
     using ListType = std::list<KeyType>;
-    using CacheContType = std::unordered_map<KeyType, std::pair<ValueType, typename ListType::iterator>>;
     using iterator = CacheContType::iterator;
     using const_iterator = CacheContType::const_iterator;
  public:
@@ -29,7 +29,7 @@ class LruCache {
 
  public:
     bool insert(const KeyType& key, const ValueType& value);
-
+    void erase(const KeyType& key);
     std::optional<ValueType> get(const KeyType& key);
 
  public:
@@ -48,13 +48,13 @@ class LruCache {
 };
 
 
-template<typename KeyType, typename ValueType, size_t CacheSize>
-bool LruCache<KeyType, ValueType, CacheSize>::insert(const KeyType& key, const ValueType& value) {
+template<typename KeyType, typename ValueType, size_t CacheSize, typename CacheContType>
+bool LruCache<KeyType, ValueType, CacheSize, CacheContType>::insert(const KeyType& key, const ValueType& value) {
     if (cont_.find(key) != cont_.end()) {
         return false;
     }
 
-    if (size_ > CacheSize) {
+    if (size_ >= CacheSize) {
         Kick();
     }
 
@@ -66,8 +66,8 @@ bool LruCache<KeyType, ValueType, CacheSize>::insert(const KeyType& key, const V
 }
 
 
-template<typename KeyType, typename ValueType, size_t CacheSize>
-void LruCache<KeyType, ValueType, CacheSize>::Kick() {
+template<typename KeyType, typename ValueType, size_t CacheSize, typename CacheContType>
+void LruCache<KeyType, ValueType, CacheSize, CacheContType>::Kick() {
     auto kicked_itr = --list_.end();
 
     cont_.erase(*kicked_itr);
@@ -76,8 +76,19 @@ void LruCache<KeyType, ValueType, CacheSize>::Kick() {
 }
 
 
-template<typename KeyType, typename ValueType, size_t CacheSize>
-std::optional<ValueType> LruCache<KeyType, ValueType, CacheSize>::get(const KeyType& key) {
+template<typename KeyType, typename ValueType, size_t CacheSize, typename CacheContType>
+void LruCache<KeyType, ValueType, CacheSize, CacheContType>::erase(const KeyType& key) {
+    if (cont_.contains(key)) {
+        auto& list_itr = cont_.at(key).second;
+        list_.erase(list_itr);
+        cont_.erase(key);
+        --size_;
+    }
+}
+
+
+template<typename KeyType, typename ValueType, size_t CacheSize, typename CacheContType>
+std::optional<ValueType> LruCache<KeyType, ValueType, CacheSize, CacheContType>::get(const KeyType& key) {
     auto cont_itr = cont_.find(key);
 
     if (cont_itr == cont_.end()) {

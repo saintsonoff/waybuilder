@@ -13,13 +13,13 @@ namespace waybuilder {
 namespace __detail {
 
 Application<ApplicationCategories::CONSOLE_CLI>::Application(std::string api_key, std::string point_list_path, std::string api_cfg_path) 
-  : cli_{api_key, point_list_path, api_cfg_path, "ru_RU"}, output_manager_{} {
+  : cli_{api_key, point_list_path, api_cfg_path, "ru_RU"}, output_manager_{std::cout} {
     CommandRegistrate();
 };
 
 
 Application<ApplicationCategories::CONSOLE_CLI>::Application(std::string api_cfg_path)
-    : output_manager_{}, cli_{api_cfg_path} {
+    : cli_{api_cfg_path}, output_manager_{std::cout} {
     CommandRegistrate();
 }
 
@@ -32,7 +32,7 @@ void Application<ApplicationCategories::CONSOLE_CLI>::CommandRegistrate() {
         std::pair<std::string, commands::YaRaspCommandCreator<commands::ChangeBase>>{"change", {cli_, output_manager_}},
         std::pair<std::string, commands::YaRaspCommandCreator<commands::ScanBase>>{"scan", {cli_, output_manager_}},
         std::pair<std::string, commands::YaRaspApiListCreator<commands::ListBase, CacheType>>{"list", {cli_, output_manager_, cache_}},
-        std::pair<std::string, commands::YaRaspCommandCreator<commands::FindBase>>{"find", {cli_, output_manager_}},
+        std::pair<std::string, commands::YaRaspApiFindCreator<commands::FindBase, CacheType>>{"find", {cli_, output_manager_, cache_}},
         std::pair<std::string, commands::YaRaspCommandCreator<commands::Logdir>>{"logdir", {cli_, output_manager_}}
     );
 };

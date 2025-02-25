@@ -4,7 +4,9 @@
 #include "application.hpp"
 
 #include <cstddef>
+#include <ctime>
 #include <string_view>
+#include <utility>
 
 #include <command_fab.hpp>
 #include <ya_rasp_cli.hpp>
@@ -18,8 +20,8 @@ namespace __detail {
 template<>
 class Application<ApplicationCategories::CONSOLE_CLI> {
  public:
-   static constexpr size_t kCacheSize = 50;
-   using CacheType = LruCache<std::string, nlohmann::json, kCacheSize>;
+   static constexpr size_t kCacheSize = 30;
+   using CacheType = LruCache<std::string, std::pair<nlohmann::json, std::time_t>, kCacheSize>;
  public:
     Application(std::string api_key, std::string point_list_path, std::string api_cfg_path);
     Application(std::string api_cfg_path);

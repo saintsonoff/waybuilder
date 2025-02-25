@@ -10,6 +10,7 @@
 
 namespace waybuilder {
 
+
 class YaRaspOutputManager {
  public:
     YaRaspOutputManager();

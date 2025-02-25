@@ -45,6 +45,7 @@ bool YaRaspOutputManager::PointsJsonOutput(YaRaspCli& cli, const nlohmann::json&
             << ex.what();
         return false;
     }
+    output_stream_ << "Total count: " << points_json.size() << std::endl;
     return true;
 };
   

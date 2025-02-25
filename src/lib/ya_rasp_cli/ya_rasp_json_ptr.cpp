@@ -1,5 +1,7 @@
 #include "ya_rasp_json_ptr.hpp"
 
+#include <nlohmann/json.hpp>
+
 namespace waybuilder {
 
 const nlohmann::json::json_pointer YaRaspJsonPtr::kApiKey{"/api_key"};
