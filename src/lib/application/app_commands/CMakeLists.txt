@@ -1,0 +1,8 @@
+add_library(app_commands STATIC app_commands.cpp)
+
+target_link_libraries(app_commands PUBLIC lru_cache)
+target_link_libraries(app_commands PUBLIC command_module)
+target_link_libraries(app_commands PUBLIC ya_rasp_cli)
+target_link_libraries(app_commands PUBLIC output_manager)
+
+target_include_directories(app_commands PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
